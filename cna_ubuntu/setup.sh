@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-sudo apt-get update && apt install -y curl
+sudo apt-get update && sudo apt install -y curl vim
 
 GOPATH="$HOME/development/go"
 mkdir -p "$GOPATH"
@@ -34,9 +34,9 @@ ln -s /usr/bin/docker1.13 /usr/bin/docker
 # install drone
 echo "Installing drone"
 curl http://downloads.drone.io/release/linux/amd64/drone.tar.gz | tar zx && \
-    install -t /usr/local/bin drone
+    sudo install -t /usr/local/bin drone
 
 # install govc
 echo "Installing govc"
-curl -sSL https://github.com/vmware/govmomi/releases/download/v0.14.0/govc_linux_amd64.gz | gzip -d > /usr/local/bin/govc && \
-    chmod +x /usr/local/bin/govc
+curl -sSL https://github.com/vmware/govmomi/releases/download/v0.14.0/govc_linux_amd64.gz | gzip -d | sudo tee /usr/local/bin/govc && \
+    sudo chmod +x /usr/local/bin/govc
