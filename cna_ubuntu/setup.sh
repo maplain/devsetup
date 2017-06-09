@@ -38,5 +38,5 @@ curl http://downloads.drone.io/release/linux/amd64/drone.tar.gz | tar zx && \
 
 # install govc
 echo "Installing govc"
-curl -sSL https://github.com/vmware/govmomi/releases/download/v0.14.0/govc_linux_amd64.gz | gzip -d | sudo tee /usr/local/bin/govc && \
+curl -sSL https://github.com/vmware/govmomi/releases/download/v0.14.0/govc_linux_amd64.gz | gzip -d | sudo tee /usr/local/bin/govc 1> /dev/null && \
     sudo chmod +x /usr/local/bin/govc
