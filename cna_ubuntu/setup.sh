@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-sudo apt-get update && sudo apt install -y curl vim
+sudo apt-get update && sudo apt-get install -y curl vim
 
 GOPATH="$HOME/development/go"
 mkdir -p "$GOPATH"
@@ -40,3 +40,6 @@ curl http://downloads.drone.io/release/linux/amd64/drone.tar.gz | tar zx && \
 echo "Installing govc"
 curl -sSL https://github.com/vmware/govmomi/releases/download/v0.14.0/govc_linux_amd64.gz | gzip -d | sudo tee /usr/local/bin/govc 1> /dev/null && \
     sudo chmod +x /usr/local/bin/govc
+
+# install zsh
+sudo apt-get install -y zsh && sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
