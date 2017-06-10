@@ -44,8 +44,8 @@ curl -sSL https://github.com/vmware/govmomi/releases/download/v0.14.0/govc_linux
 # install zsh
 sudo apt-get install -y zsh && sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 
-# install hashicorp valut
-curl -fsSLO https://releases.hashicorp.com/vault/0.7.3/vault_0.7.3_linux_amd64.zip && \
-  unzip vault_0.7.3_linux_amd64.zip && \
-  sudo mv vault /usr/local/bin && \
-  rm vault_0.7.3_linux_amd64.zip
+# install ansible
+sudo apt-get install -y software-properties-common && \
+  apt-add-repository ppa:ansible/ansible && \
+  apt-get update && \
+  apt-get install -y ansible
