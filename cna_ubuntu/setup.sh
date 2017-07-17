@@ -2,7 +2,10 @@
 
 set -euo pipefail
 
-sudo apt-get update && sudo apt-get install -y curl vim
+# set vim as git's default editor
+git config --global core.editor "vim"
+
+sudo apt-get update && sudo apt-get install -y curl vim unzip
 
 GOPATH="$HOME/development/go"
 mkdir -p "$GOPATH"
@@ -49,3 +52,16 @@ sudo apt-get install -y software-properties-common && \
   apt-add-repository ppa:ansible/ansible && \
   apt-get update && \
   apt-get install -y ansible
+
+# install packer
+curl -lo packer.zip https://releases.hashicorp.com/packer/1.0.2/packer_1.0.2_linux_amd64.zip
+unzip packer.zip
+sudo chmod +x packer
+sudo mv packer /usr/local/bin/packer
+
+# install gsutil
+export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)"
+echo "deb https://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+sudo apt-get install -y google-cloud-sdk
+gcloud init
