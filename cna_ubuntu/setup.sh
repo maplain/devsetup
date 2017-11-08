@@ -65,3 +65,11 @@ echo "deb https://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | sudo tee
 curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
 sudo apt-get install -y google-cloud-sdk
 gcloud init
+
+# install pathogen
+mkdir -p ~/.vim/autoload ~/.vim/bundle && \
+curl -LSso ~/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
+echo 'execute pathogen#infect()' >> ~/.vimrc
+
+# install vim-go
+git clone https://github.com/fatih/vim-go.git ~/.vim/bundle/vim-go
