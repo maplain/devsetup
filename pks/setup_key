@@ -1,0 +1,62 @@
+#!/bin/bash
+
+priv="id_rsa"
+pub="id_rsa.pub"
+
+usage() {
+ echo Usage: bash setup_key.sh [IP] [USERNAME] [PASSWORD] [ALIAS]
+}
+
+genrandomstring() {
+  LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 13 ; echo
+}
+
+genkey() {
+  tmpd=$(mktemp -d)
+  ssh-keygen -b 2048 -t rsa -f ${tmpd}/$priv -N '' >/dev/null 2>&1
+  echo $tmpd
+}
+
+setup_alias() {
+  local t="$HOME/.bashrc"
+  s="$(echo $SHELL)"
+  if [[ $s =~ "bash" ]]; then
+    t="$HOME/.bashrc"
+  elif [[ $s =~ "zsh" ]]; then
+    t="$HOME/.zshrc"
+  else
+    echo "Unknown shell $s. nothing is set"
+    exit
+  fi
+  echo $1 >> $t
+  echo "try source $t then run $2"
+}
+
+setup_key() {
+  local ip=$1
+  local username=$2
+  local password=$3
+  local rname=$4
+  local keyd=$5
+  export TMP_PRIV_KEY=$keyd/$priv
+  mv $keyd/$priv ~/.ssh/${rname}
+  echo "private key is available at ~/.ssh/${rname}"
+  setup_alias "alias goto-${rname}=\"ssh -i ~/.ssh/${rname} $username@$ip\"" "goto-${rname}"
+  sshpass -p $password ssh $username@$ip <<-ENDSSH
+  mkdir -p ~/.ssh
+  echo $(cat $keyd/$pub) >> ~/.ssh/authorized_keys
+  sudo sed -i 's/#AuthorizedKeysFile/AuthorizedKeysFile/g' /etc/ssh/sshd_config
+  sudo systemctl restart sshd
+  rm -rf ${keyd}
+ENDSSH
+}
+
+main() {
+  if ! [ ${#@} -eq 4 ]; then
+    usage
+    exit
+  fi
+   setup_key "$@" $(genkey)
+}
+
+main "$@"
