@@ -55,6 +55,34 @@ list_claimed_locks() {
   quiet_popd
 }
 
+list_my_claimed_locks() {
+  me="$(whoami)"
+  if [ ${#@} -ge 1 ]; then
+    me="${1}"
+  fi
+  for i in $(list_claimed_locks); do
+    quiet_pushd "${PATH_TO_PKS_LOCKS}"
+       if git log -n1 -- ./nimbus-opsman-bosh/claimed/${i}.yml | grep ${me} > /dev/null; then
+          echo $i
+       fi
+    quiet_popd
+  done
+}
+
+list_my_unclaimed_locks() {
+  me="$(whoami)"
+  if [ ${#@} -ge 1 ]; then
+    me="${1}"
+  fi
+  for i in $(list_unclaimed_locks); do
+    quiet_pushd "${PATH_TO_PKS_LOCKS}"
+       if git log -n1 -- ./nimbus-opsman-bosh/unclaimed/${i}.yml | grep ${me} > /dev/null; then
+          echo $i
+       fi
+    quiet_popd
+  done
+}
+
 list_unclaimed_locks() {
   quiet_pushd "$PATH_TO_PKS_LOCKS"
     git pull origin master > /dev/null 2>&1
