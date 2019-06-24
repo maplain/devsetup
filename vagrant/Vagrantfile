@@ -1,20 +1,14 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# All Vagrant configuration is done below. The "2" in Vagrant.configure
-# configures the configuration version (we support older styles for
-# backwards compatibility). Please don't change it unless you know what
-# you're doing.
 Vagrant.configure("2") do |config|
-  # The most common configuration options are documented and commented below.
-  # For a complete reference, please see the online documentation at
-  # https://docs.vagrantup.com.
-
-  # Every Vagrant development environment requires a box. You can search for
-  # boxes at https://vagrantcloud.com/search.
+  # this machine will serve as our router for inbound traffic
+  # but your personal laptop will be used as the DC router
   config.vm.define "u1" do |u1|
     u1.vm.box = "ubuntu/xenial64"
+    #u1.vm.network "public_network"
     u1.vm.network "private_network", ip: "192.168.33.2"
+    u1.vm.synced_folder "server/", "/root/server"
     u1.vm.provision "shell", inline: <<-SHELL
       apt-get update
       apt-get install -y apache2 socat ipvsadm bridge-utils
@@ -37,12 +31,28 @@ Vagrant.configure("2") do |config|
    stable"
      apt-get update
      apt-get install -y docker-ce
+
+     # setup interface
+     ip l add eth1 type dummy
+     ip a add dev eth1 192.168.150.1/24
+     ip l set eth1 up
+
+     # setup routing
+     ip r del 192.168.150.0/24
+     ip r add 192.168.150.2/32 via 192.168.33.3
+     ip r add 192.168.150.3/32 via 192.168.33.4
+     ip r add 192.168.150.4/32 via 192.168.33.5
+
+     # turnoff ufw
+     ufw disable
+
     SHELL
   end
 
   config.vm.define "u2" do |u2|
     u2.vm.box = "ubuntu/xenial64"
     u2.vm.network "private_network", ip: "192.168.33.3"
+    u2.vm.synced_folder "server/", "/root/server"
     u2.vm.provision "shell", inline: <<-SHELL
       apt-get update
       apt-get install -y apache2 socat ipvsadm bridge-utils
@@ -65,12 +75,26 @@ Vagrant.configure("2") do |config|
    stable"
      apt-get update
      apt-get install -y docker-ce
+
+      # setup interface
+      ip l add eth1 type dummy
+      ip a add dev eth1 192.168.150.2/24
+      ip l set eth1 up
+
+      # setup routing
+      ip r d default
+      ip r add default via 192.168.33.2
+      ip r d 192.168.150.0/24
+
+      # turnoff ufw
+      ufw disable
     SHELL
   end
 
   config.vm.define "u3" do |u3|
     u3.vm.box = "ubuntu/xenial64"
     u3.vm.network "private_network", ip: "192.168.33.4"
+    u3.vm.synced_folder "server/", "/root/server"
     u3.vm.provision "shell", inline: <<-SHELL
       apt-get update
       apt-get install -y apache2 socat ipvsadm bridge-utils
@@ -93,12 +117,26 @@ Vagrant.configure("2") do |config|
    stable"
      apt-get update
      apt-get install -y docker-ce
+
+      # setup interface
+      ip l add eth1 type dummy
+      ip a add dev eth1 192.168.150.3/24
+      ip l set eth1 up
+
+      # setup routing
+      ip r d default
+      ip r add default via 192.168.33.2
+      ip r d 192.168.150.0/24
+
+      # turnoff ufw
+      ufw disable
     SHELL
   end
 
   config.vm.define "u4" do |u4|
     u4.vm.box = "ubuntu/xenial64"
     u4.vm.network "private_network", ip: "192.168.33.5"
+    u4.vm.synced_folder "server/", "/root/server"
     u4.vm.provision "shell", inline: <<-SHELL
       apt-get update
       apt-get install -y apache2 socat ipvsadm
@@ -121,6 +159,154 @@ Vagrant.configure("2") do |config|
    stable"
      apt-get update
      apt-get install -y docker-ce
+
+     # setup interface
+     ip l add eth1 type dummy
+     ip a add dev eth1 192.168.150.4/24
+     ip l set eth1 up
+
+     # setup routing
+     ip r d default
+     ip r add default via 192.168.33.2
+     ip r d 192.168.150.0/24
+
+     # turnoff ufw
+     ufw disable
+
+    SHELL
+  end
+
+  config.vm.define "u5" do |u5|
+    u5.vm.box = "ubuntu/xenial64"
+    u5.vm.network "private_network", ip: "192.168.33.6"
+    u5.vm.synced_folder "server/", "/root/server"
+    u5.vm.provision "shell", inline: <<-SHELL
+      apt-get update
+      apt-get install -y apache2 socat ipvsadm bridge-utils
+
+      # install docker-ce
+      apt-get remove docker docker-engine docker.io containerd runc
+      apt-get install -y \
+    linux-image-extra-$(uname -r) \
+    linux-image-extra-virtual
+      apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    software-properties-common
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+      apt-key fingerprint 0EBFCD88
+      add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+     apt-get update
+     apt-get install -y docker-ce
+
+     # install quagga
+     # we'll use zebra from quagga to help use setup routings on this machine
+     sudo apt-get update
+     sudo apt-get install -y quagga
+
+      # turnoff ufw
+      ufw disable
+    SHELL
+  end
+
+  config.vm.define "u6" do |u6|
+    u6.vm.box = "ubuntu/xenial64"
+    u6.vm.network "private_network", ip: "192.168.34.2"
+    u6.vm.synced_folder "server/", "/root/server"
+    u6.vm.provision "shell", inline: <<-SHELL
+      apt-get update
+      apt-get install -y apache2 socat ipvsadm bridge-utils
+
+      # install docker-ce
+      apt-get remove docker docker-engine docker.io containerd runc
+      apt-get install -y \
+    linux-image-extra-$(uname -r) \
+    linux-image-extra-virtual
+      apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    software-properties-common
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+      apt-key fingerprint 0EBFCD88
+      add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+     apt-get update
+     apt-get install -y docker-ce
+
+      # turnoff ufw
+      ufw disable
+    SHELL
+  end
+
+  config.vm.define "u7" do |u7|
+    u7.vm.box = "ubuntu/xenial64"
+    u7.vm.network "private_network", ip: "192.168.35.2"
+    u7.vm.synced_folder "server/", "/root/server"
+    u7.vm.provision "shell", inline: <<-SHELL
+      apt-get update
+      apt-get install -y apache2 socat ipvsadm bridge-utils
+
+      # install docker-ce
+      apt-get remove docker docker-engine docker.io containerd runc
+      apt-get install -y \
+    linux-image-extra-$(uname -r) \
+    linux-image-extra-virtual
+      apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    software-properties-common
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+      apt-key fingerprint 0EBFCD88
+      add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+     apt-get update
+     apt-get install -y docker-ce
+
+     # turnoff ufw
+     ufw disable
+
+    SHELL
+  end
+
+  config.vm.define "u8" do |u8|
+    u8.vm.box = "ubuntu/xenial64"
+    u8.vm.network "private_network", ip: "192.168.36.2"
+    u8.vm.synced_folder "server/", "/root/server"
+    u8.vm.provision "shell", inline: <<-SHELL
+      apt-get update
+      apt-get install -y apache2 socat ipvsadm bridge-utils
+
+      # install docker-ce
+      apt-get remove docker docker-engine docker.io containerd runc
+      apt-get install -y \
+    linux-image-extra-$(uname -r) \
+    linux-image-extra-virtual
+      apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    software-properties-common
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+      apt-key fingerprint 0EBFCD88
+      add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+     apt-get update
+     apt-get install -y docker-ce
+
+      # turnoff ufw
+      ufw disable
     SHELL
   end
 
