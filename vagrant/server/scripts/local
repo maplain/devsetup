@@ -13,14 +13,14 @@ inject_keys_to_all() {
   local private_key=${PRIVATE_KEY}
   for i in $(seq 8); do inject ${private_key}.pub u${i}; done
 cat > $PWD/env.sh << EOF
-  alias gotou1="ssh -t -i ${private_key} root@192.168.33.2 \"cd /root/server/scripts; bash\""
-  alias gotou2="ssh -t -i ${private_key} root@192.168.33.3 \"cd /root/server/scripts; bash\""
-  alias gotou3="ssh -t -i ${private_key} root@192.168.33.4 \"cd /root/server/scripts; bash\""
-  alias gotou4="ssh -t -i ${private_key} root@192.168.33.5 \"cd /root/server/scripts; bash\""
-  alias gotou5="ssh -t -i ${private_key} root@192.168.33.6 \"cd /root/server/scripts; bash\""
-  alias gotou6="ssh -t -i ${private_key} root@192.168.34.2 \"cd /root/server/scripts; bash\""
-  alias gotou7="ssh -t -i ${private_key} root@192.168.35.2 \"cd /root/server/scripts; bash\""
-  alias gotou8="ssh -t -i ${private_key} root@192.168.36.2 \"cd /root/server/scripts; bash\""
+  alias gotou1="ssh -t -i ${private_key} root@192.168.33.2 \"cd /root/server/scripts; bash; source demo\""
+  alias gotou2="ssh -t -i ${private_key} root@192.168.33.3 \"cd /root/server/scripts; bash; source demo\""
+  alias gotou3="ssh -t -i ${private_key} root@192.168.33.4 \"cd /root/server/scripts; bash; source demo\""
+  alias gotou4="ssh -t -i ${private_key} root@192.168.33.5 \"cd /root/server/scripts; bash; source demo\""
+  alias gotou5="ssh -t -i ${private_key} root@192.168.33.6 \"cd /root/server/scripts; bash; source demo\""
+  alias gotou6="ssh -t -i ${private_key} root@192.168.34.2 \"cd /root/server/scripts; bash; source demo\""
+  alias gotou7="ssh -t -i ${private_key} root@192.168.35.2 \"cd /root/server/scripts; bash; source demo\""
+  alias gotou8="ssh -t -i ${private_key} root@192.168.36.2 \"cd /root/server/scripts; bash; source demo\""
 EOF
 }
 

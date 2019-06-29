@@ -99,15 +99,19 @@ u8_step8() {
 u5_step9() {
   # add empty conf
   touch /etc/quagga/zebra.conf
-  /usr/lib/quagga/zebra &
-  ./gobgpd -f gobgp-192-168-33-6.toml &
-  echo $! >> /root/pids
+  if ! ps -ef | grep zebra | grep -v grep; then
+	  /usr/lib/quagga/zebra &
+  fi
+  if ! ps -ef | grep gobgpd | grep -v grep; then
+	  ./gobgpd -f gobgp-192-168-33-6.toml &
+	  echo $! >> /root/pids
+  fi
   ./gobgp global rib -a ipv4
   watch ip r
 }
 
 u1_step9() {
-  if ! ps -ef | grep gobgpd; then
+  if ! ps -ef | grep gobgpd | grep -v grep; then
 	  ./gobgpd -f gobgp-192-168-33-2.toml &
 	  echo $! >> /root/pids
   fi
@@ -117,7 +121,7 @@ u1_step9() {
 }
 
 u4_step9() {
-  if ! ps -ef | grep gobgpd; then
+  if ! ps -ef | grep gobgpd | grep -v grep; then
 	  ./gobgpd -f gobgp-192-168-33-5.toml &
 	  echo $! >> /root/pids
   fi
