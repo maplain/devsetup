@@ -1,0 +1,1 @@
+{"virtualbox":{"/root/server":{"guestpath":"/root/server","hostpath":"/Users/fangyuanl/development/go/src/github.com/maplain/devsetup/vagrant/server","disabled":false,"__vagrantfile":true},"/vagrant":{"guestpath":"/vagrant","hostpath":"/Users/fangyuanl/development/go/src/github.com/maplain/devsetup/vagrant","disabled":false,"__vagrantfile":true}}}

@@ -1,0 +1,8 @@
+  alias gotou1="ssh -t -i /Users/fangyuanl/development/go/src/github.com/maplain/devsetup/vagrant/test-privkey root@192.168.33.2 \"cd /root/server/scripts; echo source /root/server/scripts/demo >> /root/.bashrc; bash\""
+  alias gotou2="ssh -t -i /Users/fangyuanl/development/go/src/github.com/maplain/devsetup/vagrant/test-privkey root@192.168.33.3 \"cd /root/server/scripts; echo source /root/server/scripts/demo >> /root/.bashrc; bash\""
+  alias gotou3="ssh -t -i /Users/fangyuanl/development/go/src/github.com/maplain/devsetup/vagrant/test-privkey root@192.168.33.4 \"cd /root/server/scripts; echo source /root/server/scripts/demo >> /root/.bashrc; bash\""
+  alias gotou4="ssh -t -i /Users/fangyuanl/development/go/src/github.com/maplain/devsetup/vagrant/test-privkey root@192.168.33.5 \"cd /root/server/scripts; echo source /root/server/scripts/demo >> /root/.bashrc; bash\""
+  alias gotou5="ssh -t -i /Users/fangyuanl/development/go/src/github.com/maplain/devsetup/vagrant/test-privkey root@192.168.33.6 \"cd /root/server/scripts; echo source /root/server/scripts/demo >> /root/.bashrc; bash\""
+  alias gotou6="ssh -t -i /Users/fangyuanl/development/go/src/github.com/maplain/devsetup/vagrant/test-privkey root@192.168.34.2 \"cd /root/server/scripts; echo source /root/server/scripts/demo >> /root/.bashrc; bash\""
+  alias gotou7="ssh -t -i /Users/fangyuanl/development/go/src/github.com/maplain/devsetup/vagrant/test-privkey root@192.168.35.2 \"cd /root/server/scripts; echo source /root/server/scripts/demo >> /root/.bashrc; bash\""
+  alias gotou8="ssh -t -i /Users/fangyuanl/development/go/src/github.com/maplain/devsetup/vagrant/test-privkey root@192.168.36.2 \"cd /root/server/scripts; echo source /root/server/scripts/demo >> /root/.bashrc; bash\""

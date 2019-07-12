@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# delete default route for subnet
+ip r del 192.168.33.0/24
