@@ -1,0 +1,61 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  # this machine will serve as our router for inbound traffic
+  # but your personal laptop will be used as the DC router
+  config.vm.define "u1" do |u1|
+    u1.vm.box = "ubuntu/xenial64"
+    u1.vm.network "public_network"
+    u1.vm.synced_folder "data/", "/mysql/backup"
+    config.vm.provision "file", source: "LocalSettings.php", destination: "/home/vagrant/LocalSettings.php"
+    config.vm.provision "file", source: "scripts/update-ip.sh", destination: "/home/vagrant/update-ip.sh"
+    config.vm.provision "file", source: "scripts/recover.sh", destination: "/home/vagrant/recover.sh"
+    config.vm.provision "file", source: "scripts/backup.sh", destination: "/home/vagrant/backup.sh"
+    config.vm.provision "file", source: "scripts/setup-mysql.sh", destination: "/home/vagrant/setup-mysql.sh"
+    config.vm.provision "file", source: "scripts/expose-docker.sh", destination: "/home/vagrant/expose-docker.sh"
+    config.vm.provision "file", source: "creds", destination: "/home/vagrant/creds"
+    u1.vm.provision "shell", inline: <<-SHELL
+      apt-get update
+      apt-get install -y socat ipvsadm bridge-utils
+
+      # install docker-ce
+      apt-get remove docker docker-engine docker.io containerd runc
+      apt-get install -y \
+    linux-image-extra-$(uname -r) \
+    linux-image-extra-virtual
+      apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    software-properties-common
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+      apt-key fingerprint 0EBFCD88
+      add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+     apt-get update
+     apt-get install -y docker-ce
+
+     # install mysql with root/root
+     # restore wiki database with passed in tarball
+     bash /home/vagrant/setup-mysql.sh
+     echo 'alias mysql="mysql --defaults-extra-file=/home/vagrant/creds"' >> ~/.bashrc
+     echo 'alias mysqldump="mysqldump --defaults-extra-file=/home/vagrant/creds"' >> ~/.bashrc
+     echo 'alias mysqlimport="mysqlimport --defaults-extra-file=/home/vagrant/creds"' >> ~/.bashrc
+     source ~/.bashrc
+     bash /home/vagrant/recover.sh
+     
+     bash /home/vagrant/expose-docker.sh
+     bash /home/vagrant/update-ip.sh
+    SHELL
+
+    u1.trigger.before :destroy do |trigger|
+      trigger.warn = "Dumping database to /mysql/backup"
+      trigger.run_remote = {inline: "bash /home/vagrant/backup.sh"}
+    end
+
+  end
+
+end
