@@ -1,0 +1,4 @@
+export DOCKER_HOST=tcp://192.168.0.103:2375
+#export DOCKER_HOST=tcp://10.1.216.3:2375
+#export DOCKER_HOST=tcp://10.64.239.250:2375
+export DOCKER_TLS_VERIFY=""

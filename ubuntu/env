@@ -1,2 +1,0 @@
-export DOCKER_HOST=tcp://192.168.0.123:2375
-export DOCKER_TLS_VERIFY=""

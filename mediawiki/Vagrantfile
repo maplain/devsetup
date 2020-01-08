@@ -8,6 +8,7 @@ Vagrant.configure("2") do |config|
     u1.vm.box = "ubuntu/xenial64"
     u1.vm.network "public_network"
     u1.vm.synced_folder "data/", "/mysql/backup"
+    u1.vm.synced_folder "images/", "/images", group:'33', owner:'33'
     config.vm.provision "file", source: "LocalSettings.php", destination: "/home/vagrant/LocalSettings.php"
     config.vm.provision "file", source: "scripts/update-ip.sh", destination: "/home/vagrant/update-ip.sh"
     config.vm.provision "file", source: "scripts/recover.sh", destination: "/home/vagrant/recover.sh"
@@ -20,7 +21,7 @@ Vagrant.configure("2") do |config|
       apt-get install -y socat ipvsadm bridge-utils
 
       # install docker-ce
-      apt-get remove docker docker-engine docker.io containerd runc
+      apt-get remove docker docker-engine docker.io containerd runc -y
       apt-get install -y \
     linux-image-extra-$(uname -r) \
     linux-image-extra-virtual
@@ -37,6 +38,9 @@ Vagrant.configure("2") do |config|
    stable"
      apt-get update
      apt-get install -y docker-ce
+
+     # pull down mediawiki docker image
+     docker pull mediawiki
 
      # install mysql with root/root
      # restore wiki database with passed in tarball
