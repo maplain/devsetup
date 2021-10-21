@@ -1,0 +1,168 @@
+#!/bin/bash
+
+source utils.sh
+
+export VIP=192.168.161.123
+export VEP=${VIP}:12345
+
+u1_step1() {
+  if ! ip l | grep vip >/dev/null 2>&1; then
+	  setup_vip ${VIP}
+  fi
+  if ! ipvsadm | grep ${VIP} >/dev/null 2>&1; then
+	  add_service ${VEP} 
+  fi
+}
+
+# default routing is via 192.168.33.2, which is required for nat mode
+u2_step2() {
+  if ip r | grep 192.168.33.0/24 >/dev/null 2>&1; then
+	  ip r d 192.168.33.0/24
+  fi
+  /root/server/server
+}
+
+u1_step3() {
+  if ! ipvsadm | grep 192.168.33.3 >/dev/null 2>&1; then
+	  add_server_nat 192.168.33.3:12345 
+  fi
+  ipvsadm
+}
+
+u1_step4() {
+  if ! ipvsadm | grep 192.168.33.4 >/dev/null 2>&1; then
+	  add_server_dr 192.168.33.4:12345 
+  fi
+  ipvsadm
+}
+
+u3_step4() {
+  # default routing should be 192.168.33.1, so response is directly routed back
+  # to client
+  if ! ip l | grep vip >/dev/null 2>&1; then
+	  setup_vip ${VIP}
+  fi
+  /root/server/server
+}
+
+u1_step5() {
+  if ! ipvsadm | grep 192.168.34.2 >/dev/null 2>&1; then
+	  add_server_encap 192.168.34.2:12345 
+  fi
+  if ! ip r | grep 192.168.34.0/24 >/dev/null 2>&1; then
+	  ip r add 192.168.34.0/24 via 192.168.33.1
+  fi
+  ipvsadm
+}
+
+u6_step5() {
+  setup_tunnel_mode_on_server ${VIP} 192.168.34.1
+  /root/server/server
+}
+
+u4_step6() {
+  if ! ip l | grep vip >/dev/null 2>&1; then
+	  setup_vip ${VIP}
+  fi
+  if ! ipvsadm | grep ${VIP} >/dev/null 2>&1; then
+	  add_service ${VEP} 
+  fi
+  if ! ip r | grep 192.168.35.0/24 >/dev/null 2>&1; then
+	  ip r add 192.168.35.0/24 via 192.168.33.1
+  fi
+  if ! ip r | grep 192.168.36.0/24 >/dev/null 2>&1; then
+	  ip r add 192.168.36.0/24 via 192.168.33.1
+  fi
+  change_default_route 192.168.33.1
+}
+
+u4_step7() {
+  if ! ipvsadm | grep 192.168.34.2 >/dev/null 2>&1; then
+	  add_server_encap 192.168.35.2:12345 
+  fi
+  if ! ipvsadm | grep 192.168.34.2 >/dev/null 2>&1; then
+	  add_server_encap 192.168.36.2:12345 
+  fi
+  ipvsadm
+}
+
+u7_step8() {
+  setup_tunnel_mode_on_server ${VIP} 192.168.35.1
+  /root/server/server
+}
+
+u8_step8() {
+  setup_tunnel_mode_on_server ${VIP} 192.168.36.1
+  /root/server/server
+}
+
+u5_step9() {
+  # add empty conf
+  touch /etc/quagga/zebra.conf
+  if ! ps -ef | grep zebra | grep -v grep; then
+	  /usr/lib/quagga/zebra &
+  fi
+  if ! ps -ef | grep gobgpd | grep -v grep; then
+	  ./gobgpd -f gobgp-192-168-33-6.toml &
+	  echo $! >> /root/pids
+  fi
+  ./gobgp global rib -a ipv4
+  watch ip r
+}
+
+u1_step9() {
+  if ! ps -ef | grep gobgpd | grep -v grep; then
+	  ./gobgpd -f gobgp-192-168-33-2.toml &
+	  echo $! >> /root/pids
+  fi
+  ./gobgp global rib -a ipv4 add 192.168.161.123/32
+  ./gobgp global rib -a ipv4
+  # watch ipvsadm -L
+}
+
+u4_step9() {
+  if ! ps -ef | grep gobgpd | grep -v grep; then
+	  ./gobgpd -f gobgp-192-168-33-5.toml &
+	  echo $! >> /root/pids
+  fi
+  ./gobgp global rib -a ipv4 add 192.168.161.123/32
+  ./gobgp global rib -a ipv4
+  # watch ipvsadm -L
+}
+
+local_change_route_to() {
+  ip=${1}
+  sudo ip r del ${VIP}/32
+  sudo ip r add ${VIP}/32 via ${ip}
+}
+
+# check on backend server
+u1_health_check_1() {
+  healthcheck 192.168.33.3:12345/healthchk 900 "ipvsadm -d -t ${VEP} -r 192.168.33.3:12345" "ipvsadm -a -t ${VEP} -r 192.168.33.3:12345 -m" &
+  echo $! >> /root/pids
+  healthcheck 192.168.33.4:12345/healthchk 900 "ipvsadm -d -t ${VEP} -r 192.168.33.4:12345" "ipvsadm -a -t ${VEP} -r 192.168.33.4:12345 -g" &
+  echo $! >> /root/pids
+  healthcheck 192.168.34.2:12345/healthchk 900 "ipvsadm -d -t ${VEP} -r 192.168.34.2:12345" "ipvsadm -a -t ${VEP} -r 192.168.34.2:12345 -i" &
+  echo $! >> /root/pids
+}
+
+# check on VIP
+u1_health_check_2() {
+  healthcheck ${VEP}/healthchk 900 "./gobgp global rib -a ipv4 del 192.168.161.123/32" "./gobgp global rib -a ipv4 add 192.168.161.123/32" &
+  echo $! >> /root/pids
+}
+
+# check on backend server
+u4_health_check() {
+  healthcheck 192.168.35.2:12345/healthchk 900 "ipvsadm -d -t ${VEP} -r 192.168.35.2:12345" "ipvsadm -a -t ${VEP} -r 192.168.35.2:12345 -i" &
+  echo $! >> /root/pids
+  healthcheck 192.168.36.2:12345/healthchk 900 "ipvsadm -d -t ${VEP} -r 192.168.36.2:12345" "ipvsadm -a -t ${VEP} -r 192.168.36.2:12345 -i" &
+  echo $! >> /root/pids
+}
+
+cleanup_healcheck() {
+	for i in $(< /root/pids); do
+		kill -9 ${i} >/dev/null 2>&1
+	done
+	rm /root/pids
+}
